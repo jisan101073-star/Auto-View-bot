@@ -1,4 +1,4 @@
-python-telegram-bot
-openpyxl
-python-dotenv
-flask
+Telethon
+cryptg
+aiohttp
+
