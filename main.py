@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 import json
+import random  # <-- র‍্যান্ডম ডিলের জন্য এটি যুক্ত করা হয়েছে
 from telethon import TelegramClient, events, Button
 from telethon.sessions import StringSession
 from aiohttp import web
@@ -99,7 +100,11 @@ async def auto_post_loop():
                     # ২. নতুন পোস্ট দেওয়া
                     sent_msg = await userbot.send_message(group_id, auto_post_message)
                     last_sent_messages[group_id].append(sent_msg.id)
-                    await asyncio.sleep(2)
+                    
+                    # <-- এখানে ২ থেকে ৫ সেকেন্ডের র‍্যান্ডম ডিলে দেওয়া হয়েছে -->
+                    delay_time = random.randint(2, 5)
+                    await asyncio.sleep(delay_time)
+                    
                 except Exception as e:
                     logger.error(f"Auto post error in {group_id}: {str(e)}")
             last_post_time = time.time()
@@ -232,7 +237,7 @@ async def autodelete_toggle(event):
         await event.reply("🗑️ **Auto Delete Enabled!**\nনতুন পোস্ট করার সময় আগের পোস্ট অটো-ডিলিট হয়ে যাবে।")
     else:
         auto_delete_enabled = False
-        await event.reply("🚫 **Auto Delete Disabled!**\nআগের পোস্ট মুছে ফেলা হবে না।")
+        await event.reply("🚫 **Auto Delete Disabled!**\nআগের পোস্ট মুছে ফেলা হবে মজীবে না।")
 
 # --- Auto Post Management Commands ---
 @bot.on(events.NewMessage(pattern=r'^/setautopost$'))
@@ -361,7 +366,11 @@ async def content_handler(event):
                 sent_msg = await userbot.send_message(group_id, event.message)
                 last_sent_messages[group_id].append(sent_msg.id)
                 success_count += 1
-                await asyncio.sleep(2)
+                
+                # <-- এখানে ম্যানুয়াল পোস্টের জন্যও ২ থেকে ৫ সেকেন্ডের র‍্যান্ডম ডিলে দেওয়া হয়েছে -->
+                delay_time = random.randint(2, 5)
+                await asyncio.sleep(delay_time)
+                
             except Exception as e:
                 failed_count += 1
                 logger.error(f"Failed to post to group {group_id}: {str(e)}")
@@ -370,7 +379,7 @@ async def content_handler(event):
         last_post_time = time.time()
 
         await processing_msg.edit(
-            f"✅ **Targeted Broadcast Complete** GF\n\n"
+            f"✅ **Targeted Broadcast Complete** ⚔️\n\n"
             f"📊 **Summary:**\n"
             f"• **Successful**: {success_count} groups ⚡\n"
             f"• **Failed**: {failed_count} groups ❌\n\n"
@@ -390,4 +399,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-    
+            
