@@ -31,7 +31,7 @@ auto_delete_enabled = True   # Auto delete feature toggle
 is_auto_post_running = False # Track if Auto-Post is active
 auto_post_task = None
 auto_post_message = None     # Saved message object
-last_sent_messages = {}      # {group_id: message_id} for deletion tracking
+last_sent_messages = {}      # {group_id: [msg_id1, msg_id2]} for deletion tracking
 
 # Selected Groups Storage
 GROUPS_FILE = "selected_groups.json"
@@ -60,7 +60,7 @@ bot = TelegramClient('bot_session', API_ID, API_HASH)
 
 # Render Port Server Keep-Alive
 async def handle(request):
-    return web.Response(text="JisanV1 Engine is Alive!")
+    return web.Response(text="JisanV2 Engine is Alive!")
 
 async def start_dummy_server():
     app = web.Application()
@@ -84,16 +84,21 @@ async def auto_post_loop():
             logger.info("⚡ Executing Scheduled Auto-Post...")
             for group_id in list(selected_groups):
                 try:
-                    # ১. আগের পোস্ট থাকলে অটো ডিলিট করা
-                    if auto_delete_enabled and group_id in last_sent_messages:
+                    # Initialize list if group not in dict
+                    if group_id not in last_sent_messages:
+                        last_sent_messages[group_id] = []
+
+                    # ১. আগের পোস্ট থাকলে অটো ডিলিট করা (২টি পোস্ট রেখে ৩ নম্বরটিতে ডিলিট)
+                    if auto_delete_enabled and len(last_sent_messages[group_id]) >= 2:
                         try:
-                            await userbot.delete_messages(group_id, last_sent_messages[group_id])
+                            old_msg_id = last_sent_messages[group_id].pop(0) # Remove the oldest
+                            await userbot.delete_messages(group_id, old_msg_id)
                         except Exception:
                             pass
 
                     # ২. নতুন পোস্ট দেওয়া
                     sent_msg = await userbot.send_message(group_id, auto_post_message)
-                    last_sent_messages[group_id] = sent_msg.id
+                    last_sent_messages[group_id].append(sent_msg.id)
                     await asyncio.sleep(2)
                 except Exception as e:
                     logger.error(f"Auto post error in {group_id}: {str(e)}")
@@ -103,7 +108,7 @@ async def auto_post_loop():
 async def start_handler(event):
     bot_users.add(event.sender_id)
     await event.reply(
-        "🏴‍☠️ **Welcome to JisanV1_Bot!** 🩸\n\n"
+        "🏴‍☠️ **Welcome to JisanV2_Bot!** 🩸\n\n"
         "👑 *The official View & Engagement automation bot by Jisan Brand.*\n\n"
         "⚡ **Available Commands:**\n"
         "• `/post` — Broadcast message to your target groups (1 hour cooldown)\n"
@@ -210,7 +215,7 @@ async def close_groups_callback(event):
 async def stats_handler(event):
     current_hours = int(auto_post_interval / 3600)
     await event.reply(
-        f"📊 **JisanV1 Engine Statistics** 💀\n\n"
+        f"📊 **JisanV2 Engine Statistics** 💀\n\n"
         f"👥 Total unique bot users: `{len(bot_users)}`\n"
         f"🎯 Active target groups set: `{len(selected_groups)}`\n"
         f"⏱️ Auto-Post Interval: `{current_hours} Hour(s)`\n"
@@ -343,14 +348,18 @@ async def content_handler(event):
 
         for group_id in list(selected_groups):
             try:
-                if auto_delete_enabled and group_id in last_sent_messages:
+                if group_id not in last_sent_messages:
+                    last_sent_messages[group_id] = []
+
+                if auto_delete_enabled and len(last_sent_messages[group_id]) >= 2:
                     try:
-                        await userbot.delete_messages(group_id, last_sent_messages[group_id])
+                        old_msg = last_sent_messages[group_id].pop(0)
+                        await userbot.delete_messages(group_id, old_msg)
                     except Exception:
                         pass
 
                 sent_msg = await userbot.send_message(group_id, event.message)
-                last_sent_messages[group_id] = sent_msg.id
+                last_sent_messages[group_id].append(sent_msg.id)
                 success_count += 1
                 await asyncio.sleep(2)
             except Exception as e:
@@ -369,11 +378,11 @@ async def content_handler(event):
         )
 
 async def main():
-    logger.info("Starting JisanV1 Engine (Telegram Userbot + Controller Bot)...")
+    logger.info("Starting JisanV2 Engine (Telegram Userbot + Controller Bot)...")
     await start_dummy_server()
     await userbot.start()
     await bot.start(bot_token=BOT_TOKEN)
-    logger.info("🚀 JisanV1 Engine is Online!")
+    logger.info("🚀 JisanV2 Engine is Online!")
     await asyncio.gather(
         userbot.run_until_disconnected(),
         bot.run_until_disconnected()
@@ -381,3 +390,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+    
