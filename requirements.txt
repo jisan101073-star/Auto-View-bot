@@ -1,0 +1,5 @@
+Telethon
+cryptg
+aiohttp
+firebase-admin
+cryptography
